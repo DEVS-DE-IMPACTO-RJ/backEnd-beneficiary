@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Groq AI - Dicas Nutricionais</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #45a049; }
+        .mock-btn { background: #2196F3; }
+        .mock-btn:hover { background: #0b7dda; }
+        .loading { color: #666; font-style: italic; }
+        .error { color: red; }
+        .resultado { background: #f5f5f5; padding: 20px; border-radius: 8px; margin-top: 20px; }
+        .receita { background: white; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #4CAF50; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 10px; }
+        .badge-mock { background: #2196F3; color: white; }
+        .badge-openai { background: #4CAF50; color: white; }
+        .badge-groq { background: #FF6B35; color: white; }
+        h3 { color: #333; }
+        ul { line-height: 1.8; }
+        .toggle { margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 4px; }
+        .restricoes-container { margin: 20px 0; padding: 15px; background: #e8f5e9; border-radius: 4px; }
+        .restricao-checkbox { margin: 10px; }
+        .alimentos-input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .btn-danger { background: #f44336; }
+        .btn-danger:hover { background: #da190b; }
+        .tabs { display: flex; gap: 10px; margin: 20px 0; border-bottom: 2px solid #ddd; }
+        .tab { padding: 10px 20px; cursor: pointer; background: #f5f5f5; border: none; border-radius: 4px 4px 0 0; }
+        .tab.active { background: #4CAF50; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <h1>Teste de Dicas Nutricionais com Groq AI 🚀</h1>
+    
+    <div class="toggle">
+        <label>
+            <input type="checkbox" id="usarMock" checked> 
+            Usar Modo MOCK (sem consumir créditos da Groq)
+        </label>
+        <p style="font-size: 12px; color: #856404; margin: 5px 0 0 0;">
+            ✨ Groq é GRATUITO e muito rápido! Desmarque para testar.
+        </p>
+    </div>
+
+    <!-- Abas de navegação -->
+    <div class="tabs">
+        <button class="tab active" onclick="trocarAba('cestas')">📦 Cestas Disponíveis</button>
+        <button class="tab" onclick="trocarAba('salvar')">🔄 Salvar Alimentos</button>
+    </div>
+
+    <!-- Aba: Cestas Disponíveis -->
+    <div id="cestas-tab" class="tab-content active">
+        <div class="restricoes-container">
+            <h3>🥗 Suas Restrições Alimentares:</h3>
+            <label class="restricao-checkbox">
+                <input type="checkbox" class="restricao-cestas" value="vegetariana"> Vegetariana
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" class="restricao-cestas" value="vegana"> Vegana
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" class="restricao-cestas" value="sem lactose"> Sem Lactose
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" class="restricao-cestas" value="sem glúten"> Sem Glúten
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" class="restricao-cestas" value="sem açúcar"> Sem Açúcar
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" class="restricao-cestas" value="low carb"> Low Carb
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" class="restricao-cestas" value="diabética"> Diabética
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" class="restricao-cestas" value="sem frutos do mar"> Sem Frutos do Mar
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" class="restricao-cestas" value="sem oleaginosas"> Sem Oleaginosas
+            </label>
+        </div>
+        
+        <div>
+            <button onclick="listarPublicacoes()">Listar Cestas Disponíveis</button>
+        </div>
+    </div>
+
+    <!-- Aba: Salvar Alimentos -->
+    <div id="salvar-tab" class="tab-content">
+        <h2>🔄 Receitas para Salvar Alimentos</h2>
+        <p>Digite os alimentos que você tem e podem estar próximos ao vencimento:</p>
+        
+        <textarea 
+            id="alimentosInput" 
+            class="alimentos-input" 
+            placeholder="Ex: leite, ovos, farinha de trigo, tomate, banana, pão, queijo, manteiga, arroz, feijão (separados por vírgula)"
+            rows="3"
+        ></textarea>
+
+        <div class="restricoes-container">
+            <h3>🥗 Restrições Alimentares:</h3>
+            <label class="restricao-checkbox">
+                <input type="checkbox" value="vegetariana"> Vegetariana
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" value="vegana"> Vegana
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" value="sem lactose"> Sem Lactose
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" value="sem glúten"> Sem Glúten
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" value="sem açúcar"> Sem Açúcar
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" value="low carb"> Low Carb
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" value="diabética"> Diabética
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" value="sem frutos do mar"> Sem Frutos do Mar
+            </label>
+            <label class="restricao-checkbox">
+                <input type="checkbox" value="sem oleaginosas"> Sem Oleaginosas
+            </label>
+        </div>
+
+        <button onclick="gerarReceitasSalvar()" class="btn-danger">
+            🚨 Gerar Receitas para Salvar Alimentos
+        </button>
+        
+        <div style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; font-size: 12px;">
+            <strong>💡 Sugestões de alimentos:</strong> leite, ovos, farinha de trigo, farinha de milho, açúcar, manteiga, queijo, iogurte, creme de leite, tomate, cebola, alho, batata, cenoura, banana, maçã, pão, arroz, feijão, macarrão, frango, carne moída
+        </div>
+    </div>
+
+    <div id="resultado"></div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+
+        function trocarAba(aba) {
+            // Remover active de todas as abas
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Ativar aba selecionada
+            event.target.classList.add('active');
+            document.getElementById(`${aba}-tab`).classList.add('active');
+            
+            // Limpar resultado
+            document.getElementById('resultado').innerHTML = '';
+        }
+
+        function obterRestricoesSelecionadas() {
+            const checkboxes = document.querySelectorAll('.restricao-checkbox input:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        function obterRestricoesCestas() {
+            const checkboxes = document.querySelectorAll('.restricao-cestas:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        async function gerarReceitasSalvar() {
+            const resultadoDiv = document.getElementById('resultado');
+            const alimentosTexto = document.getElementById('alimentosInput').value.trim();
+            
+            if (!alimentosTexto) {
+                resultadoDiv.innerHTML = '<p class="error">Por favor, digite os alimentos!</p>';
+                return;
+            }
+
+            const alimentos = alimentosTexto.split(',').map(a => a.trim()).filter(a => a);
+            const restricoes = obterRestricoesSelecionadas();
+            const usarMock = document.getElementById('usarMock').checked;
+            
+            resultadoDiv.innerHTML = `<p class="loading">Gerando receitas para salvar seus alimentos${usarMock ? ' (modo MOCK)' : ' com Groq AI'}... 🔄</p>`;
+
+            try {
+                const response = await fetch(`${API_URL}/api/receitas/salvar-alimentos${usarMock ? '?mock=true' : ''}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ alimentos, restricoes })
+                });
+
+                const data = await response.json();
+
+                if (data.erro) {
+                    resultadoDiv.innerHTML = `<p class="error">Erro: ${data.erro}</p>`;
+                    return;
+                }
+
+                mostrarReceitas(data, true);
+            } catch (error) {
+                resultadoDiv.innerHTML = `<p class="error">Erro: ${error.message}</p>`;
+            }
+        }
+
+        function mostrarReceitas(data, isSalvar = false) {
+            const modoClass = data.modo === 'mock' ? 'badge-mock' : 'badge-groq';
+            const modoTexto = data.modo === 'mock' ? '📝 MOCK' : '🚀 Groq AI';
+
+            let html = `
+                <div class="resultado">
+                    <h2>🍳 ${isSalvar ? 'Receitas' : 'Dicas Nutricionais'} <span class="badge ${modoClass}">${modoTexto}</span></h2>
+                    ${isSalvar ? `
+                        <p><strong>Alimentos:</strong> ${data.alimentos_utilizados.join(', ')}</p>
+                        ${data.restricoes_aplicadas.length > 0 ? 
+                            `<p><strong>Restrições:</strong> ${data.restricoes_aplicadas.join(', ')}</p>` : ''}
+                    ` : `
+                        <h3>${data.publicacao.titulo}</h3>
+                        <p><strong>Alimentos da cesta:</strong> ${data.publicacao.alimentos.join(', ')}</p>
+                        ${data.restricoes_aplicadas && data.restricoes_aplicadas.length > 0 ? 
+                            `<p><strong>🥗 Restrições aplicadas:</strong> ${data.restricoes_aplicadas.join(', ')}</p>` : ''}
+                    `}
+                    ${data.aviso ? `<p style="background: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0;">${data.aviso}</p>` : ''}
+                    
+                    ${data.dicas_nutricionais ? `
+                        <h3>🥗 Dicas Nutricionais:</h3>
+                        <ul>
+                            ${data.dicas_nutricionais.map(dica => `<li>${dica}</li>`).join('')}
+                        </ul>
+                        <h3>👨‍🍳 Receitas Sugeridas:</h3>
+                    ` : '<h3>👨‍🍳 Receitas:</h3>'}
+            `;
+
+            data.receitas.forEach(receita => {
+                html += `
+                    <div class="receita">
+                        <h4>${receita.nome}</h4>
+                        ${receita.restricoes_atendidas && receita.restricoes_atendidas.length > 0 ? 
+                            `<p><span class="badge badge-mock">${receita.restricoes_atendidas.join(', ')}</span></p>` : ''}
+                        <p><strong>⏱️ Tempo:</strong> ${receita.tempo_preparo} | <strong>👥 Porções:</strong> ${receita.porcoes}</p>
+                        <p><strong>Ingredientes:</strong></p>
+                        <ul>
+                            ${receita.ingredientes.map(ing => `<li>${ing}</li>`).join('')}
+                        </ul>
+                        <p><strong>Modo de Preparo:</strong></p>
+                        <p>${receita.modo_preparo}</p>
+                        ${receita.dica_conservacao ? 
+                            `<p><strong>💡 Dica:</strong> ${receita.dica_conservacao}</p>` : ''}
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            document.getElementById('resultado').innerHTML = html;
+        }
+
+        async function listarPublicacoes() {
+            const resultadoDiv = document.getElementById('resultado');
+            resultadoDiv.innerHTML = '<p class="loading">Carregando publicações...</p>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/publicacoes`);
+                const data = await response.json();
+                const restricoes = obterRestricoesCestas();
+
+                let html = '<div class="resultado"><h2>Cestas Disponíveis:</h2>';
+                if (restricoes.length > 0) {
+                    html += `<p><strong>🥗 Restrições aplicadas:</strong> ${restricoes.join(', ')}</p>`;
+                }
+                
+                data.forEach(pub => {
+                    html += `
+                        <div class="receita">
+                            <h3>${pub.titulo}</h3>
+                            <p><strong>ID:</strong> ${pub.id}</p>
+                            <p><strong>Alimentos:</strong> ${pub.alimentos.join(', ')}</p>
+                            <p><strong>Peso:</strong> ${pub.peso}</p>
+                            <button onclick="obterDicasComRestricoes(${pub.id})">Ver Dicas Nutricionais</button>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                resultadoDiv.innerHTML = html;
+            } catch (error) {
+                resultadoDiv.innerHTML = `<p class="error">Erro: ${error.message}</p>`;
+            }
+        }
+
+        async function obterDicasComRestricoes(id) {
+            const resultadoDiv = document.getElementById('resultado');
+            const usarMock = document.getElementById('usarMock').checked;
+            const restricoes = obterRestricoesCestas();
+            
+            resultadoDiv.innerHTML = `<p class="loading">Gerando dicas personalizadas${usarMock ? ' (modo MOCK)' : ' com Groq AI'}... ⚡</p>`;
+
+            try {
+                const response = await fetch(`${API_URL}/api/publicacoes/${id}/receitas-especiais${usarMock ? '?mock=true' : ''}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ restricoes })
+                });
+
+                const data = await response.json();
+
+                if (data.erro) {
+                    resultadoDiv.innerHTML = `<p class="error">Erro: ${data.erro}<br>Detalhes: ${data.detalhes || ''}</p>`;
+                    return;
+                }
+
+                mostrarReceitas(data, false);
+            } catch (error) {
+                resultadoDiv.innerHTML = `<p class="error">Erro ao conectar com o servidor: ${error.message}</p>`;
+            }
+        }
+
+        async function obterDicas(id) {
+            // Redirecionar para a função com restrições
+            obterDicasComRestricoes(id);
+        }
+
+        // Carregar publicações automaticamente
+        window.onload = () => listarPublicacoes();
+    </script>
+</body>
+</html>

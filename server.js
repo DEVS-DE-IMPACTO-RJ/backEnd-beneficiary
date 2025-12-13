@@ -1,12 +1,21 @@
 const http = require('http');
 const usuariosRoutes = require('./routes/usuariosRoutes');
+const openaiRoutes = require('./routes/openaiRoutes');
 const coletasRoutes = require('./routes/coletasRoutes');
 const publicacoesRoutes = require('./routes/publicacoesRoutes');
+const OpenAI = require('openai');
+require('dotenv').config();
+
+// Inicializar Groq usando a biblioteca OpenAI
+const groqClient = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
+});
 
 const PORT = 3000;
 
 const server = http.createServer(async (req, res) => {
-  // CORS headers
+  // Habilitar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -16,58 +25,25 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
-  try {
-    // Tentar rotas de usuárias
-    const usuarioResult = await usuariosRoutes(req, res);
-    if (usuarioResult !== null) return;
+  // Tentar rotas de usuários
+  const usuariosResult = await usuariosRoutes(req, res);
+  if (usuariosResult !== null) return;
 
-    // Tentar rotas de coletas
-    const coletaResult = await coletasRoutes(req, res);
-    if (coletaResult !== null) return;
+  // Tentar rotas de coletas
+  const coletasResult = await coletasRoutes(req, res);
+  if (coletasResult !== null) return;
 
-    // Tentar rotas de publicações
-    const publicacaoResult = await publicacoesRoutes(req, res);
-    if (publicacaoResult !== null) return;
+  // Tentar rotas de publicações
+  const publicacoesResult = await publicacoesRoutes(req, res);
+  if (publicacoesResult !== null) return;
 
-    // Rota raiz
-    if (req.url === '/' && req.method === 'GET') {
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(`
-        <h1>API de Coleta de Cesta Básica - Perfil Maria</h1>
-        <h2>Rotas Disponíveis:</h2>
-        
-        <h3>👤 Gerenciar Meu Perfil</h3>
-        <ul>
-          <li><strong>POST</strong> /api/perfil - Criar meu perfil</li>
-          <li><strong>GET</strong> /api/perfil/:id - Ver meu perfil</li>
-          <li><strong>PUT</strong> /api/perfil/:id - Atualizar meu perfil</li>
-          <li><strong>DELETE</strong> /api/perfil/:id - Deletar meu perfil</li>
-        </ul>
+  // Tentar rotas de OpenAI/Groq
+  const openaiResult = await openaiRoutes(req, res, groqClient);
+  if (openaiResult !== null) return;
 
-        <h3>🛒 Minhas Coletas</h3>
-        <ul>
-          <li><strong>POST</strong> /api/minhas-coletas - Agendar coleta de cesta básica</li>
-          <li><strong>GET</strong> /api/minhas-coletas/:usuarioId - Ver minhas coletas</li>
-          <li><strong>DELETE</strong> /api/minhas-coletas/cancelar/:id - Cancelar coleta</li>
-        </ul>
-
-        <h3>📢 Publicações de Estabelecimentos</h3>
-        <ul>
-          <li><strong>GET</strong> /api/publicacoes - Ver publicações disponíveis</li>
-          <li><strong>POST</strong> /api/publicacoes/:id/interesse - Demonstrar interesse</li>
-          <li><strong>GET</strong> /api/minhas-reacoes/:usuarioId - Ver minhas reações</li>
-        </ul>
-      `);
-    }
-
-    // Rota não encontrada
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ erro: 'Rota não encontrada' }));
-
-  } catch (error) {
-    res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ erro: 'Erro ao processar requisição', detalhes: error.message }));
-  }
+  // Rota não encontrada
+  res.writeHead(404, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ erro: 'Rota não encontrada' }));
 });
 
 server.listen(PORT, () => {

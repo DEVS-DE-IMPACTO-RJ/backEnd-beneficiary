@@ -1,6 +1,7 @@
 const url = require('url');
 
 let coletas = [];
+let proximoIdColeta = 0;
 
 const parseBody = (req) => {
   return new Promise((resolve, reject) => {
@@ -21,30 +22,30 @@ const coletasRoutes = async (req, res) => {
   const path = parsedUrl.pathname;
   const method = req.method;
 
-  // Agendar coleta de cesta básica
+  // Agendar Coleta de Cesta Básica
   if (path === '/api/minhas-coletas' && method === 'POST') {
     const body = await parseBody(req);
     const novaColeta = {
-      id: coletas.length + 1,
-      usuarioId: body.usuarioId,               
+      id: ++proximoIdColeta,
+      usuarioId: body.usuarioId,
       estabelecimento: body.estabelecimento,
       endereco: body.endereco,
       data: body.data,
       horario: body.horario,
-      tipoCesta: body.tipoCesta || 'básica',
+      tipoCesta: body.tipoCesta,
       observacoes: body.observacoes,
-      status: 'pendente',
+      status: 'agendada',
       criadoEm: new Date().toISOString()
     };
     coletas.push(novaColeta);
     res.writeHead(201, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ 
-      mensagem: 'Coleta de cesta básica agendada com sucesso!', 
+      mensagem: 'Coleta agendada com sucesso!', 
       coleta: novaColeta 
     }));
   }
 
-  // Ver minhas coletas
+  // Ver Minhas Coletas
   if (path.match(/\/api\/minhas-coletas\/\d+$/) && method === 'GET') {
     const usuarioId = parseInt(path.split('/')[3]);
     const minhasColetas = coletas.filter(c => c.usuarioId === usuarioId);
@@ -52,7 +53,7 @@ const coletasRoutes = async (req, res) => {
     return res.end(JSON.stringify(minhasColetas));
   }
 
-  // Cancelar minha coleta
+  // Cancelar Coleta
   if (path.match(/\/api\/minhas-coletas\/cancelar\/\d+$/) && method === 'DELETE') {
     const id = parseInt(path.split('/')[4]);
     const index = coletas.findIndex(c => c.id === id);

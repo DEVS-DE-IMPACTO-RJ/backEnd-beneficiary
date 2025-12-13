@@ -1,25 +1,35 @@
 const url = require('url');
 
+// Mock de publicações (pode usar o mesmo do openaiRoutes)
 let publicacoes = [
-  { 
-    id: 1, 
-    estabelecimento: 'Padaria Pão Nosso',
-    titulo: 'Cestas básicas disponíveis', 
-    descricao: 'Pães, arroz, feijão e óleo',
-    endereco: 'Rua das Acácias, 456',
-    horarioColeta: '14:00 às 18:00',
-    reacoes: [] 
+  {
+    id: 1,
+    titulo: "Cesta Básica Completa",
+    alimentos: ["leite", "ovos", "farinha de trigo", "tomate", "cebola", "batata", "cenoura", "arroz", "feijão"],
+    peso: "8kg",
+    estabelecimento: "Padaria Pão Nosso",
+    endereco: "Rua das Acácias, 456"
   },
-  { 
-    id: 2, 
-    estabelecimento: 'Mercado Bom Preço',
-    titulo: 'Doação de alimentos', 
-    descricao: 'Frutas, legumes e verduras',
-    endereco: 'Av. Principal, 789',
-    horarioColeta: '10:00 às 16:00',
-    reacoes: [] 
+  {
+    id: 2,
+    titulo: "Cesta de Frutas e Laticínios",
+    alimentos: ["banana", "maçã", "laranja", "mamão", "iogurte", "queijo", "manteiga"],
+    peso: "5kg",
+    estabelecimento: "Mercado Central",
+    endereco: "Av. Principal, 789"
+  },
+  {
+    id: 3,
+    titulo: "Cesta Orgânica Semanal",
+    alimentos: ["alface", "brócolis", "couve", "rúcula", "tomate orgânico", "cenoura orgânica"],
+    peso: "4kg",
+    estabelecimento: "Feira Orgânica",
+    endereco: "Praça Verde, s/n"
   }
 ];
+
+let interesses = [];
+let proximoIdInteresse = 0;
 
 const parseBody = (req) => {
   return new Promise((resolve, reject) => {
@@ -40,58 +50,45 @@ const publicacoesRoutes = async (req, res) => {
   const path = parsedUrl.pathname;
   const method = req.method;
 
-  // Listar publicações de estabelecimentos
+  // Ver Publicações Disponíveis
   if (path === '/api/publicacoes' && method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify(publicacoes));
   }
 
-  // Demonstrar interesse em uma publicação
+  // Demonstrar Interesse em Publicação
   if (path.match(/\/api\/publicacoes\/\d+\/interesse$/) && method === 'POST') {
-    const id = parseInt(path.split('/')[3]);
+    const publicacaoId = parseInt(path.split('/')[3]);
     const body = await parseBody(req);
-    const publicacao = publicacoes.find(p => p.id === id);
     
+    const publicacao = publicacoes.find(p => p.id === publicacaoId);
     if (!publicacao) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ erro: 'Publicação não encontrada' }));
     }
 
-    // Verificar se já demonstrou interesse
-    const jaReagiu = publicacao.reacoes.find(r => r.usuarioId === body.usuarioId);
-    if (jaReagiu) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ erro: 'Você já demonstrou interesse nesta publicação' }));
-    }
-
-    const interesse = {
+    const novoInteresse = {
+      id: ++proximoIdInteresse,
+      publicacaoId: publicacaoId,
       usuarioId: body.usuarioId,
-      tipo: 'interesse',
-      data: new Date().toISOString()
+      publicacao: publicacao.titulo,
+      criadoEm: new Date().toISOString()
     };
-
-    publicacao.reacoes.push(interesse);
-    res.writeHead(200, { 'Content-Type': 'application/json' });
+    
+    interesses.push(novoInteresse);
+    res.writeHead(201, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ 
       mensagem: 'Interesse registrado com sucesso!', 
-      publicacao 
+      interesse: novoInteresse 
     }));
   }
 
-  // Ver minhas reações
+  // Ver Minhas Reações/Interesses
   if (path.match(/\/api\/minhas-reacoes\/\d+$/) && method === 'GET') {
     const usuarioId = parseInt(path.split('/')[3]);
-    const minhasReacoes = publicacoes
-      .filter(p => p.reacoes.some(r => r.usuarioId === usuarioId))
-      .map(p => ({
-        publicacaoId: p.id,
-        estabelecimento: p.estabelecimento,
-        titulo: p.titulo,
-        reacao: p.reacoes.find(r => r.usuarioId === usuarioId)
-      }));
-    
+    const meusInteresses = interesses.filter(i => i.usuarioId === usuarioId);
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify(minhasReacoes));
+    return res.end(JSON.stringify(meusInteresses));
   }
 
   return null;
