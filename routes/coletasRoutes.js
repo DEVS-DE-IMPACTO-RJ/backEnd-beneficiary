@@ -26,7 +26,7 @@ const coletasRoutes = async (req, res) => {
     const body = await parseBody(req);
     const novaColeta = {
       id: coletas.length + 1,
-      usuarioId: body.usuarioId,
+      usuarioId: body.usuarioId,               
       estabelecimento: body.estabelecimento,
       endereco: body.endereco,
       data: body.data,

@@ -1,6 +1,16 @@
 const url = require('url');
 
 let usuarios = [];
+let proximoId = 0;
+
+// Função para obter o próximo ID único
+const obterProximoId = () => {
+  if (usuarios.length === 0) {
+    return 1;
+  }
+  const maiorId = Math.max(...usuarios.map(u => u.id));
+  return maiorId + 1;
+};
 
 const parseBody = (req) => {
   return new Promise((resolve, reject) => {
@@ -25,7 +35,7 @@ const usuariosRoutes = async (req, res) => {
   if (path === '/api/perfil' && method === 'POST') {
     const body = await parseBody(req);
     const novoPerfil = {
-      id: usuarios.length + 1,
+      id: obterProximoId(),
       nome: body.nome,
       email: body.email,
       telefone: body.telefone,
@@ -54,7 +64,7 @@ const usuariosRoutes = async (req, res) => {
 
   // Atualizar meu perfil
   if (path.match(/\/api\/perfil\/\d+$/) && method === 'PUT') {
-    const id = parseInt(path.split('/')[3]);
+    const id = parseInt(path.split ('/')[3]);
     const body = await parseBody(req);
     const perfilIndex = usuarios.findIndex(u => u.id === id);
     
