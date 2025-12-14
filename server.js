@@ -12,7 +12,7 @@ const groqClient = new OpenAI({
   baseURL: "https://api.groq.com/openai/v1",
 });
 
-const PORT = 3000;
+const PORT = 3334;
 
 const server = http.createServer(async (req, res) => {
   // Habilitar CORS
