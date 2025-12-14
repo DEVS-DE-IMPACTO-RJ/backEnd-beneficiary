@@ -4,6 +4,28 @@ const supabase = require('../config/supabase');
 let interesses = [];
 let proximoIdInteresse = 0;
 
+// Dados mockados para testes (quando banco estiver vazio)
+const publicacoesMock = [
+  {
+    id: 1,
+    titulo: "Cesta Básica Completa",
+    alimentos: ["arroz", "feijão", "óleo", "açúcar", "café", "leite"],
+    peso: "8kg",
+    estabelecimento: "Padaria Pão Nosso",
+    endereco: "Rua das Acácias, 456",
+    status: "PUBLISHED"
+  },
+  {
+    id: 2,
+    titulo: "Cesta de Frutas e Verduras",
+    alimentos: ["banana", "maçã", "tomate", "alface", "cenoura"],
+    peso: "5kg",
+    estabelecimento: "Hortifruti Silva",
+    endereco: "Av. Central, 789",
+    status: "PUBLISHED"
+  }
+];
+
 const parseBody = (req) => {
   return new Promise((resolve, reject) => {
     let body = '';
@@ -35,33 +57,55 @@ const publicacoesRoutes = async (req, res) => {
       return res.end(JSON.stringify({ erro: error.message }));
     }
 
+    // Se não houver publicações no banco, retorna dados mockados
+    const publicacoes = data && data.length > 0 ? data : publicacoesMock;
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify(data));
+    return res.end(JSON.stringify(publicacoes));
   }
 
   // Demonstrar Interesse em Publicação
-  if (path.match(/\/api\/publicacoes\/\d+\/interesse$/) && method === 'POST') {
-    const publicacaoId = parseInt(path.split('/')[3]);
+  if (path.match(/\/api\/publicacoes\/[^\/]+\/interesse$/) && method === 'POST') {
+    const publicacaoId = path.split('/')[3]; // Pode ser número ou UUID
     const body = await parseBody(req);
     
-    // Verifica se a publicação existe no banco
-    const { data: publicacao, error: pubError } = await supabase
-      .from('publications')
-      .select('id, titulo')
-      .eq('id', publicacaoId)
-      .eq('status', 'PUBLISHED')
-      .single();
+    console.log('🔍 Buscando publicação ID:', publicacaoId);
+    console.log('📋 Tipo do ID:', typeof publicacaoId);
     
-    if (pubError || !publicacao) {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ erro: 'Publicação não encontrada' }));
+    // Tenta buscar no banco primeiro (REMOVE o filtro .eq('status', 'PUBLISHED') para debug)
+    const { data: publicacoes, error: pubError } = await supabase
+      .from('publications')
+      .select('*')
+      .eq('id', publicacaoId);
+    
+    console.log('📦 Dados retornados do Supabase:', publicacoes);
+    console.log('❌ Erro Supabase:', pubError);
+    console.log('📊 Quantidade de resultados:', publicacoes?.length || 0);
+    
+    // Pega a primeira publicação encontrada
+    let publicacaoEncontrada = publicacoes && publicacoes.length > 0 ? publicacoes[0] : null;
+    
+    // Se não encontrar no banco, busca nos dados mockados
+    if (!publicacaoEncontrada) {
+      publicacaoEncontrada = publicacoesMock.find(p => p.id == publicacaoId);
+      console.log('📦 Publicação mockada encontrada:', publicacaoEncontrada);
+      
+      if (!publicacaoEncontrada) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ 
+          erro: 'Publicação não encontrada',
+          idBuscado: publicacaoId,
+          tipoId: typeof publicacaoId,
+          detalhes: 'Verifique se o ID existe no banco de dados'
+        }));
+      }
     }
 
     const novoInteresse = {
       id: ++proximoIdInteresse,
       publicacaoId: publicacaoId,
       usuarioId: body.usuarioId,
-      publicacao: publicacao.titulo,
+      publicacao: publicacaoEncontrada.titulo || publicacaoEncontrada.title,
       criadoEm: new Date().toISOString()
     };
     
@@ -74,9 +118,9 @@ const publicacoesRoutes = async (req, res) => {
   }
 
   // Ver Minhas Reações/Interesses
-  if (path.match(/\/api\/minhas-reacoes\/\d+$/) && method === 'GET') {
-    const usuarioId = parseInt(path.split('/')[3]);
-    const meusInteresses = interesses.filter(i => i.usuarioId === usuarioId);
+  if (path.match(/\/api\/minhas-reacoes\/[^\/]+$/) && method === 'GET') {
+    const usuarioId = path.split('/')[3]; // Pode ser número ou UUID
+    const meusInteresses = interesses.filter(i => i.usuarioId == usuarioId);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify(meusInteresses));
   }
