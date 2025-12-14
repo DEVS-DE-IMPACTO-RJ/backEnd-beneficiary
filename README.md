@@ -1291,4 +1291,71 @@ Content-Type: application/json
 
 ---
 
+## 🌍 Inspirações e Referências para Evolução Futura
+
+Este projeto se inspira em plataformas que ajudam pessoas a aproveitarem melhor seus alimentos, criar receitas personalizadas e reduzir desperdícios. Abaixo, alguns sites que serviram de referência e que podem guiar funcionalidades futuras:
+
+### 1. **Ciclo Orgânico** 🌱
+**Link:** [https://cicloorganico.com.br/index/ciclo-organico](https://cicloorganico.com.br/index/ciclo-organico)
+
+**O que é:**
+Plataforma brasileira focada em sustentabilidade, agricultura orgânica e redução de desperdício de alimentos. Oferece informações sobre produção sustentável, dicas de armazenamento e conscientização ambiental.
+
+**Inspiração para o projeto:**
+- **Educação alimentar**: Ensinar beneficiários a conservar alimentos por mais tempo
+- **Sustentabilidade**: Dicas de como aproveitar 100% dos alimentos das cestas básicas
+- **Receitas com sobras**: Criar funcionalidades que sugerem receitas usando cascas, talos e partes dos alimentos normalmente descartadas
+- **Compostagem**: Futuramente, ensinar como compostar restos orgânicos
+
+**Possível integração futura:**
+- Sistema de dicas de conservação baseado no ciclo de vida dos alimentos
+- Receitas zero desperdício (aproveitamento integral)
+- Calculadora de redução de desperdício por usuário
+
+---
+
+### 2. **Supercook** 🍳
+**Link:** [https://www.supercook.com/#/desktop](https://www.supercook.com/#/desktop)
+
+**O que é:**
+Site que permite ao usuário digitar os ingredientes que possui em casa e recebe sugestões de receitas que podem ser feitas **apenas com aqueles ingredientes** (sem precisar comprar nada adicional). Possui um banco de dados gigante de receitas.
+
+**Inspiração para o projeto:**
+- **Motor de busca inteligente**: O usuário informa os alimentos da cesta que recebeu e o sistema sugere receitas
+- **Aproveitamento total**: Ajuda famílias a cozinhar sem precisar comprar ingredientes extras
+- **Filtros por restrições**: Vegetariano, vegano, sem glúten, etc.
+- **Economia**: Maximiza o uso dos alimentos recebidos, evitando gastos adicionais
+
+**Possível integração futura:**
+- Criar um "matcher" que cruza os alimentos da cesta com um banco de receitas
+- Sistema de favoritos para receitas mais usadas
+- Histórico de receitas preparadas
+- Avaliação e comentários dos usuários nas receitas
+
+---
+
+
+### 🎯 Visão Futura do Projeto
+
+Combinando as melhores ideias dessas plataformas, o projeto pode evoluir para:
+
+1. **Sistema inteligente de receitas**: Como o Supercook, mas focado em cestas básicas brasileiras
+2. **Educação sustentável**: Inspirado no Ciclo Orgânico, com dicas de zero desperdício
+3. **Comunidade ativa**: Baseado no modelo Reddit, onde beneficiários compartilham experiências
+4. **IA personalizada**: Receitas adaptadas a:
+   - Restrições alimentares (já implementado ✅)
+   - Tamanho da família
+   - Equipamentos disponíveis (fogão, microondas, panela de pressão)
+   - Orçamento adicional (caso o usuário possa comprar temperos)
+5. **Gamificação**: 
+   - Conquistas por experimentar novas receitas
+   - Ranking de usuários mais sustentáveis
+   - Sistema de pontos por feedback e avaliações
+6. **Impacto social mensurável**:
+   - Quantidade de alimentos aproveitados vs desperdiçados
+   - Economia gerada para as famílias
+   - Receitas mais populares por região
+
+---
+
 ## 📁 Estrutura do Projeto

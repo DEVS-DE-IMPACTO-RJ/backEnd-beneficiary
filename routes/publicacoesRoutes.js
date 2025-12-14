@@ -24,7 +24,8 @@ const publicacoesMock = [
     endereco: "Av. Central, 789",
     status: "PUBLISHED"
   }
-];
+]; 
+
 
 const parseBody = (req) => {
   return new Promise((resolve, reject) => {
