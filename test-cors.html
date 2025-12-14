@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste CORS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste de CORS - Maria Back</h1>
+    <p>Servidor: <strong>http://localhost:3334</strong></p>
+
+    <h2>Testes disponíveis:</h2>
+    
+    <button onclick="testarGET()">1. Testar GET (Publicações)</button>
+    <button onclick="testarPOST()">2. Testar POST (Criar Perfil)</button>
+    <button onclick="testarOPTIONS()">3. Testar OPTIONS (Preflight)</button>
+    <button onclick="limpar()">Limpar</button>
+
+    <div id="resultado"></div>
+
+    <script>
+        const API_URL = 'http://localhost:3334';
+
+        async function testarGET() {
+            const resultDiv = document.getElementById('resultado');
+            resultDiv.innerHTML = '<div class="result">🔄 Testando GET...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/publicacoes`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ CORS funcionando com GET!</strong><br><br>
+                        <strong>Status:</strong> ${response.status}<br>
+                        <strong>Headers CORS:</strong><br>
+                        - Access-Control-Allow-Origin: ${response.headers.get('Access-Control-Allow-Origin')}<br><br>
+                        <strong>Dados recebidos:</strong><br>
+                        ${JSON.stringify(data, null, 2)}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ Erro de CORS!</strong><br><br>
+                        ${error.message}<br><br>
+                        <strong>Possíveis causas:</strong><br>
+                        - Servidor não está rodando<br>
+                        - CORS não está configurado corretamente<br>
+                        - Porta incorreta
+                    </div>
+                `;
+            }
+        }
+
+        async function testarPOST() {
+            const resultDiv = document.getElementById('resultado');
+            resultDiv.innerHTML = '<div class="result">🔄 Testando POST...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/perfil`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nome: 'Teste CORS',
+                        email: 'teste@cors.com',
+                        telefone: '11999999999',
+                        endereco: 'Rua Teste, 123'
+                    })
+                });
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ CORS funcionando com POST!</strong><br><br>
+                        <strong>Status:</strong> ${response.status}<br>
+                        <strong>Headers CORS:</strong><br>
+                        - Access-Control-Allow-Origin: ${response.headers.get('Access-Control-Allow-Origin')}<br>
+                        - Access-Control-Allow-Methods: ${response.headers.get('Access-Control-Allow-Methods')}<br><br>
+                        <strong>Resposta:</strong><br>
+                        ${JSON.stringify(data, null, 2)}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ Erro de CORS no POST!</strong><br><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testarOPTIONS() {
+            const resultDiv = document.getElementById('resultado');
+            resultDiv.innerHTML = '<div class="result">🔄 Testando OPTIONS (Preflight)...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/publicacoes`, {
+                    method: 'OPTIONS'
+                });
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ Preflight CORS funcionando!</strong><br><br>
+                        <strong>Status:</strong> ${response.status}<br>
+                        <strong>Headers CORS:</strong><br>
+                        - Access-Control-Allow-Origin: ${response.headers.get('Access-Control-Allow-Origin')}<br>
+                        - Access-Control-Allow-Methods: ${response.headers.get('Access-Control-Allow-Methods')}<br>
+                        - Access-Control-Allow-Headers: ${response.headers.get('Access-Control-Allow-Headers')}<br>
+                        - Access-Control-Max-Age: ${response.headers.get('Access-Control-Max-Age')}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ Erro no Preflight!</strong><br><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function limpar() {
+            document.getElementById('resultado').innerHTML = '';
+        }
+
+        // Testar automaticamente ao carregar
+        window.onload = () => {
+            console.log('🧪 Página de teste CORS carregada');
+            console.log('Clique nos botões para testar diferentes métodos HTTP');
+        };
+    </script>
+</body>
+</html>

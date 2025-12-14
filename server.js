@@ -13,15 +13,26 @@ const groqClient = new OpenAI({
 });
 
 const PORT = 3334;
+fetch('http://localhost:3334/api/publicacoes')
+  .then(res => res.json())
+  .then(data => console.log('✅ CORS funcionando!', data))
+  .catch(err => console.error('❌ Erro CORS:', err));
+// Função para aplicar CORS
+const applyCORS = (res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 horas
+};
 
 const server = http.createServer(async (req, res) => {
-  // Habilitar CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // Aplicar CORS em todas as requisições
+  applyCORS(res);
 
+  // Tratar requisições OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
-    res.writeHead(200);
+    res.writeHead(204); // No Content
     return res.end();
   }
 
@@ -47,6 +58,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-  console.log('API pronta para testes!');
+  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+  console.log(`📡 CORS habilitado para todas as origens`);
+  console.log(`✅ API pronta para testes!`);
 });
