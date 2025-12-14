@@ -145,7 +145,7 @@
     <div id="resultado"></div>
 
     <script>
-        const API_URL = 'http://localhost:3000';
+        const API_URL = 'http://localhost:3334';
 
         function trocarAba(aba) {
             // Remover active de todas as abas
@@ -273,11 +273,12 @@
                 data.forEach(pub => {
                     html += `
                         <div class="receita">
-                            <h3>${pub.titulo}</h3>
+                            <h3>${pub.title || pub.titulo}</h3>
                             <p><strong>ID:</strong> ${pub.id}</p>
-                            <p><strong>Alimentos:</strong> ${pub.alimentos.join(', ')}</p>
-                            <p><strong>Peso:</strong> ${pub.peso}</p>
-                            <button onclick="obterDicasComRestricoes(${pub.id})">Ver Dicas Nutricionais</button>
+                            <p><strong>Descrição:</strong> ${pub.description || 'Sem descrição'}</p>
+                            <p><strong>Data:</strong> ${pub.starts_at ? new Date(pub.starts_at).toLocaleDateString('pt-BR') : 'A definir'}</p>
+                            <p><strong>Vagas:</strong> ${pub.capacity_total ? `${pub.capacity_reserved || 0}/${pub.capacity_total}` : 'Não especificado'}</p>
+                            <button onclick="obterDicasComRestricoes('${pub.id}')">Ver Dicas Nutricionais</button>
                         </div>
                     `;
                 });

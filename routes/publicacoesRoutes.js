@@ -1,32 +1,5 @@
 const url = require('url');
-
-// Mock de publicações (pode usar o mesmo do openaiRoutes)
-let publicacoes = [
-  {
-    id: 1,
-    titulo: "Cesta Básica Completa",
-    alimentos: ["leite", "ovos", "farinha de trigo", "tomate", "cebola", "batata", "cenoura", "arroz", "feijão"],
-    peso: "8kg",
-    estabelecimento: "Padaria Pão Nosso",
-    endereco: "Rua das Acácias, 456"
-  },
-  {
-    id: 2,
-    titulo: "Cesta de Frutas e Laticínios",
-    alimentos: ["banana", "maçã", "laranja", "mamão", "iogurte", "queijo", "manteiga"],
-    peso: "5kg",
-    estabelecimento: "Mercado Central",
-    endereco: "Av. Principal, 789"
-  },
-  {
-    id: 3,
-    titulo: "Cesta Orgânica Semanal",
-    alimentos: ["alface", "brócolis", "couve", "rúcula", "tomate orgânico", "cenoura orgânica"],
-    peso: "4kg",
-    estabelecimento: "Feira Orgânica",
-    endereco: "Praça Verde, s/n"
-  }
-];
+const supabase = require('../config/supabase');
 
 let interesses = [];
 let proximoIdInteresse = 0;
@@ -50,10 +23,20 @@ const publicacoesRoutes = async (req, res) => {
   const path = parsedUrl.pathname;
   const method = req.method;
 
-  // Ver Publicações Disponíveis
+  // Ver Publicações Disponíveis (PUBLISHED)
   if (path === '/api/publicacoes' && method === 'GET') {
+    const { data, error } = await supabase
+      .from('publications')
+      .select('*')
+      .eq('status', 'PUBLISHED');
+
+    if (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ erro: error.message }));
+    }
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify(publicacoes));
+    return res.end(JSON.stringify(data));
   }
 
   // Demonstrar Interesse em Publicação
@@ -61,8 +44,15 @@ const publicacoesRoutes = async (req, res) => {
     const publicacaoId = parseInt(path.split('/')[3]);
     const body = await parseBody(req);
     
-    const publicacao = publicacoes.find(p => p.id === publicacaoId);
-    if (!publicacao) {
+    // Verifica se a publicação existe no banco
+    const { data: publicacao, error: pubError } = await supabase
+      .from('publications')
+      .select('id, titulo')
+      .eq('id', publicacaoId)
+      .eq('status', 'PUBLISHED')
+      .single();
+    
+    if (pubError || !publicacao) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ erro: 'Publicação não encontrada' }));
     }

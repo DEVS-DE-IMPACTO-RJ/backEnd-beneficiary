@@ -1,16 +1,7 @@
 const url = require('url');
 
-let usuarios = [];
-let proximoId = 0;
-
-// Função para obter o próximo ID único
-const obterProximoId = () => {
-  if (usuarios.length === 0) {
-    return 1;
-  }
-  const maiorId = Math.max(...usuarios.map(u => u.id));
-  return maiorId + 1;
-};
+let perfis = [];
+let proximoIdPerfil = 1;
 
 const parseBody = (req) => {
   return new Promise((resolve, reject) => {
@@ -31,18 +22,26 @@ const usuariosRoutes = async (req, res) => {
   const path = parsedUrl.pathname;
   const method = req.method;
 
-  // Criar perfil (Cadastro)
+  // Criar perfil (Cadastro de BENEFICIARIO)
   if (path === '/api/perfil' && method === 'POST') {
     const body = await parseBody(req);
+    
     const novoPerfil = {
-      id: obterProximoId(),
+      id: proximoIdPerfil++,
       nome: body.nome,
       email: body.email,
       telefone: body.telefone,
       endereco: body.endereco,
-      criadoEm: new Date().toISOString()
+      tipo_usuario: 'BENEFICIARIO',
+      cpf: body.cpf,
+      data_nascimento: body.data_nascimento,
+      numero_dependentes: body.numero_dependentes || 0,
+      restricoes_alimentares: body.restricoes_alimentares || [],
+      criado_em: new Date().toISOString()
     };
-    usuarios.push(novoPerfil);
+    
+    perfis.push(novoPerfil);
+
     res.writeHead(201, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ 
       mensagem: 'Perfil criado com sucesso!', 
@@ -50,54 +49,60 @@ const usuariosRoutes = async (req, res) => {
     }));
   }
 
-  // Ver meu perfil
+  // Ver perfil por ID
   if (path.match(/\/api\/perfil\/\d+$/) && method === 'GET') {
     const id = parseInt(path.split('/')[3]);
-    const perfil = usuarios.find(u => u.id === id);
+    
+    const perfil = perfis.find(p => p.id === id);
+    
     if (!perfil) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ erro: 'Perfil não encontrado' }));
     }
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify(perfil));
   }
 
-  // Atualizar meu perfil
+  // Atualizar perfil
   if (path.match(/\/api\/perfil\/\d+$/) && method === 'PUT') {
-    const id = parseInt(path.split ('/')[3]);
+    const id = parseInt(path.split('/')[3]);
     const body = await parseBody(req);
-    const perfilIndex = usuarios.findIndex(u => u.id === id);
+
+    const perfil = perfis.find(p => p.id === id);
     
-    if (perfilIndex === -1) {
+    if (!perfil) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ erro: 'Perfil não encontrado' }));
     }
 
-    usuarios[perfilIndex] = {
-      ...usuarios[perfilIndex],
-      nome: body.nome || usuarios[perfilIndex].nome,
-      email: body.email || usuarios[perfilIndex].email,
-      telefone: body.telefone || usuarios[perfilIndex].telefone,
-      endereco: body.endereco || usuarios[perfilIndex].endereco,
-      atualizadoEm: new Date().toISOString()
-    };
+    // Atualizar campos
+    if (body.nome) perfil.nome = body.nome;
+    if (body.telefone) perfil.telefone = body.telefone;
+    if (body.endereco) perfil.endereco = body.endereco;
+    if (body.restricoes_alimentares) perfil.restricoes_alimentares = body.restricoes_alimentares;
+    if (body.numero_dependentes !== undefined) perfil.numero_dependentes = body.numero_dependentes;
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ 
       mensagem: 'Perfil atualizado com sucesso!', 
-      perfil: usuarios[perfilIndex] 
+      perfil: perfil 
     }));
   }
 
-  // Deletar meu perfil
+  // Deletar perfil
   if (path.match(/\/api\/perfil\/\d+$/) && method === 'DELETE') {
     const id = parseInt(path.split('/')[3]);
-    const index = usuarios.findIndex(u => u.id === id);
+    
+    const index = perfis.findIndex(p => p.id === id);
+    
     if (index === -1) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ erro: 'Perfil não encontrado' }));
     }
-    usuarios.splice(index, 1);
+
+    perfis.splice(index, 1);
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ mensagem: 'Perfil deletado com sucesso!' }));
   }

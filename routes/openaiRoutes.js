@@ -1,26 +1,24 @@
 const url = require('url');
+const supabase = require('../config/supabase');
 
-// Mock de publicações com ingredientes mais realistas
-let publicacoes = [
-  {
-    id: 1,
-    titulo: "Cesta Básica Completa",
-    alimentos: ["leite", "ovos", "farinha de trigo", "tomate", "cebola", "batata", "cenoura", "arroz", "feijão", "açúcar"],
-    peso: "8kg"
-  },
-  {
-    id: 2,
-    titulo: "Cesta de Frutas e Laticínios",
-    alimentos: ["banana", "maçã", "laranja", "mamão", "iogurte", "queijo", "manteiga"],
-    peso: "5kg"
-  },
-  {
-    id: 3,
-    titulo: "Cesta Orgânica Semanal",
-    alimentos: ["alface", "brócolis", "couve", "rúcula", "tomate orgânico", "cenoura orgânica"],
-    peso: "4kg"
+// Função para extrair alimentos da descrição
+const extrairAlimentos = (description) => {
+  if (!description) return ['arroz', 'feijão', 'óleo', 'açúcar', 'café'];
+  
+  // Extrair alimentos da descrição (ex: "5kg arroz, 2kg feijão, 1L óleo")
+  const regex = /\d+(?:kg|L|g|ml)?\s+([a-záàâãéèêíïóôõöúçñ\s]+)/gi;
+  const matches = [];
+  let match;
+  
+  while ((match = regex.exec(description)) !== null) {
+    const alimento = match[1].trim().toLowerCase();
+    if (alimento && !alimento.includes('trazer') && !alimento.includes('documento')) {
+      matches.push(alimento);
+    }
   }
-];
+  
+  return matches.length > 0 ? matches : ['arroz', 'feijão', 'óleo', 'açúcar', 'café'];
+};
 
 // Mock de resposta da IA
 const gerarDicasMock = (alimentos) => {
@@ -361,27 +359,35 @@ const openaiRoutes = async (req, res, groqClient) => {
   const usarMock = parsedUrl.query.mock === 'true';
 
   // Buscar dicas para uma publicação específica (CORRIGIDO)
-  if (path.match(/\/api\/publicacoes\/\d+\/dicas$/) && method === 'GET') {
-    const id = parseInt(path.split('/')[3]);
-    const publicacao = publicacoes.find(p => p.id === id);
+  if (path.match(/\/api\/publicacoes\/[a-f0-9-]+\/dicas$/) && method === 'GET') {
+    const id = path.split('/')[3];
+    
+    const { data: publicacao, error } = await supabase
+      .from('publications')
+      .select('*')
+      .eq('id', id)
+      .eq('status', 'PUBLISHED')
+      .single();
 
-    if (!publicacao) {
+    if (error || !publicacao) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ erro: 'Publicação não encontrada' }));
     }
+    
+    const alimentos = extrairAlimentos(publicacao.description);
 
     try {
       // Usar a função correta: gerarDicasMock para GET simples
       const dicas = usarMock 
-        ? gerarDicasMock(publicacao.alimentos)
-        : await gerarDicasEReceitasCompletas(groqClient, publicacao.alimentos, [], false);
+        ? gerarDicasMock(alimentos)
+        : await gerarDicasEReceitasCompletas(groqClient, alimentos, [], false);
       
       res.writeHead(200, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({
         publicacao: {
           id: publicacao.id,
-          titulo: publicacao.titulo,
-          alimentos: publicacao.alimentos
+          titulo: publicacao.title,
+          alimentos: alimentos
         },
         ...dicas,
         modo: usarMock ? 'mock' : 'groq'
@@ -395,11 +401,8 @@ const openaiRoutes = async (req, res, groqClient) => {
     }
   }
 
-  // Listar todas as publicações
-  if (path === '/api/publicacoes' && method === 'GET') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify(publicacoes));
-  }
+  // Listar todas as publicações (já implementado em publicacoesRoutes)
+  // Este endpoint foi movido para publicacoesRoutes.js
 
   // Novo endpoint: Receitas para alimentos próximos ao vencimento
   if (path === '/api/receitas/salvar-alimentos' && method === 'POST') {
@@ -432,22 +435,29 @@ const openaiRoutes = async (req, res, groqClient) => {
   }
 
   // Endpoint para receitas de uma publicação com restrições (ATUALIZADO)
-  if (path.match(/\/api\/publicacoes\/\d+\/receitas-especiais$/) && method === 'POST') {
-    const id = parseInt(path.split('/')[3]);
+  if (path.match(/\/api\/publicacoes\/[a-f0-9-]+\/receitas-especiais$/) && method === 'POST') {
+    const id = path.split('/')[3];
     const body = await parseBody(req);
     const restricoes = body.restricoes || [];
     
-    const publicacao = publicacoes.find(p => p.id === id);
+    const { data: publicacao, error } = await supabase
+      .from('publications')
+      .select('*')
+      .eq('id', id)
+      .eq('status', 'PUBLISHED')
+      .single();
 
-    if (!publicacao) {
+    if (error || !publicacao) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ erro: 'Publicação não encontrada' }));
     }
+    
+    const alimentos = extrairAlimentos(publicacao.description);
 
     try {
       const resultado = await gerarDicasEReceitasCompletas(
         groqClient, 
-        publicacao.alimentos, 
+        alimentos, 
         restricoes, 
         usarMock
       );
@@ -456,8 +466,8 @@ const openaiRoutes = async (req, res, groqClient) => {
       return res.end(JSON.stringify({
         publicacao: {
           id: publicacao.id,
-          titulo: publicacao.titulo,
-          alimentos: publicacao.alimentos
+          titulo: publicacao.title,
+          alimentos: alimentos
         },
         restricoes_aplicadas: restricoes,
         ...resultado,
